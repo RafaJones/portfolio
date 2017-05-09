@@ -1,0 +1,8 @@
+name: Publish Document
+title:
+account: rpubs
+server: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/273219/388b933a67a944408aed9ebbc64162ef
+bundleId: https://api.rpubs.com/api/v1/document/273219/388b933a67a944408aed9ebbc64162ef
+url: http://rpubs.com/rafajones/273219
+when: 1493825807.86713
