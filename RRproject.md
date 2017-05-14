@@ -1,17 +1,17 @@
 # Tornadoes kill the most people, but Floods destroy our economy
 Carlos Mercado  
 April 30, 2017  
-#Synposis 
+## Synposis 
 Downloading the NOAA data and selecting key columns (property damage, crop damage, weather events, fatalities, and injuries) I analyzed human cost and economic costs of weather events. Filtering each table group (human cost groups being: event type, fatalities, and injuries and economic cost groups being: event type, property damage, and crop damage) involved similar steps. First, identifying the events that had non-zero values (a slim portion of the data). Then subsetting the highest 10% of damages and manually inspecting the event type names. From there, I used gsub to to fix and fuse event names (this was partially a subjective process). After that I summarised each event's sum and plotted those in the top 10% of total damage. For each plot it was clear which events were the most painful.  
 
-#Results 
+## Results 
 Tornadoes killed over 5,000 people and injured over 75,000 more. Heat was a distant second. In economic damage, floods lead in property damage while drought does the most crop damage. Floods do the most economic damage in total dollars. 
 
 
 
 
 
-#Data Processing 
+## Data Processing 
 
 If the file has not already been unzipped, the following if statement will be FALSE and the data will be downloaded, unzipped, and made into data frame, weathd  (weather data). 
 The 46.9 MB file may take a minute or so to load. 
@@ -65,7 +65,7 @@ summary(eventd)
 ##                     Max.   :990.000                      Max.   :902297
 ```
 
-#Which type of events are most harmful to population health? 
+## Which type of events are most harmful to population health? 
 
 In the summary, we see a wide range of Fatalities (0:583), Injuries (0:1700), 
 We also see that HAIL, Marine Thunderstorm Wind, and Thunderstorm Wind are the most common event types.
