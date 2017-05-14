@@ -222,7 +222,7 @@ qplot(FATALITIES, INJURIES, data = mostdmg, col = EVTYPE,
 
 Tornadoes are far and away the most harmful event to population health with excessive heat a distant second. The other top deadliest events are colored as labeled. 
 
-#Which type of events are most economically damaging? 
+## Which type of events are most economically damaging? 
 
 Returning to our first trimmed down data set, events data (eventd) we'll select STATE, EVTYPE, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP and REFNUM. 
 While some of the EXP are clearly hundred, thousand, million, or billion, others are not labeled and the documentation does not define them clearly. Thus, we will either multiply the property and crop damage by their numeric EXP equivalent or multiply them by 1(size not labeled in the raw NOAA data report). 
