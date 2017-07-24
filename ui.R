@@ -9,40 +9,52 @@
 
 library(shiny)
 
-# 
+# Define UI for application that draws a histogram
 shinyUI(fluidPage(
   
   # Application title
-  titlePanel("Assessing Basketball Players by Game Score and Results"),
+  titlePanel("Sample Size Tester"),
   
-  # 
+  # Sidebar with several sliders
   sidebarLayout(
     sidebarPanel(
-      h2("Which players would you like to assess?"),
-     
-      checkboxInput("durant","Kevin Durant (GSW)",value = TRUE),
-      checkboxInput("harden","James Harden (HOU)",value = TRUE),
-      checkboxInput("westbrook","Russell Westbrook (OKC)",value = TRUE),
-      checkboxInput("james","Lebron James(CLE)",value = TRUE),
-      checkboxInput("leonard","Kawhi Leonard (SAN)",value = TRUE),
+            h2("Testing the Sample Size needed for A/B Testing"),
+            h3("Plot problems may arise if sample sizes differ greatly"),
+            h6("a .1 ratio is E[B] = 1.1*E[A]"),
+       sliderInput("meanA",
+                   "Mean of A",
+                   min = 1,
+                   max = 100,
+                   value = 50),
+       sliderInput("sdA", 
+                   "Standard Deviation of A",
+                   min = 1, 
+                   max = 10, 
+                   value = 5
+                   ),
+       sliderInput("meanB",
+                   "Mean of B",
+                   min = 1, max = 100, 
+                   value = 50),
+       sliderInput("sdB",
+                   "Standard Deviation of B",
+                   min = 1, max = 10, value = 5), 
+       sliderInput("trueDif", "True Difference in Means as ratio", min = 0, max = 1,
+                   value = 0, step  = .01),
+       numericInput("sampleA", "Sample Size of A (max 50,000)", min = 1, max = 50000,
+                    value = 30),
+       numericInput("sampleB", "Sample Size of B (max 50,000)", min = 1, max = 50000,
+                    value = 30),
       
-      h4("Highlight an area of the plot to specify games"),
-      tableOutput("SlopeTable"),
-      submitButton("Finished Selecting")
-      ),
-    # 
+       checkboxInput("varEqual", "Assume the true variances equal?", value = TRUE),
+       submitButton("Finished Adjustments")
+    ),
+    
+    # Show a plot of the generated distribution
     mainPanel(
-            tabsetPanel(type = "tabs",
-                tabPanel("Main",br(),        
-       plotOutput("gameplot", brush = brushOpts( id = "brush1")),
-       h3("Relationship between Individual Performance and Team Point Differential"),
-       h6("Marginal Result, is the increase in Results (for example, your team winning by 2
-          points instead of 1) for a 1pt increase in Game Score (a single number representing
-          all the individual contributions of a player)")
-                        ),
-                tabPanel("documentation",br(),textOutput("documentation"))
-                )
-        )
-)
+       plotOutput("freq1"),
+       textOutput("ttest")
+       
+    )
+  )
 ))
-
