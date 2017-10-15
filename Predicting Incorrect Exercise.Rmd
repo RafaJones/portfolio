@@ -1,0 +1,146 @@
+---
+title: "Predicting Incorrect Exercises"
+author: "Carlos Mercado"
+date: "July 11, 2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+##The Problem 
+
+Using accelerometer data from 4 places during an exercise (arm, forearm,belt, and the dumbell itself) across six participants, can the **quality** of the exercise be predicted? 
+
+This is the "classe" variable in the Weight Lifting Exercises Dataset. Thank you to, 
+
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
+
+For creating the dataset under creative commons. 
+
+##Explaining my Model Choices 
+
+Seeing the dimensions of the data I was immediately wary of overfitting, but upon examining pieces of the data and cleaning it of unusable features I narrowed it down to 53 features (removing the NA, character, time components and user names). I did this under the assumption that the time dependencies of the accelerometer would be negligible in predicting grossly incorrect exercises (as explained by the experimenters, a professional was there to monitor the exercise and ensure safe, but dramatic incorrect motions). 
+
+I started with a computationally friendly Linear Discriminant Analysis to benchmark my in-sample error (70%). From there, I used parallel computing (as suggested by the discussion boards) to create a more accurate Random Forest Model. Upon seeing that it had perfect in-sample accuracy, I decided against creating an ensemble model and went straight to testing the RF model on a validation set I had already separated. At 99.34% accuracy, it would succeed in getting all of the 20 final tests correct around 90% of the time.
+
+
+##Downloading and Cleaning the data 
+
+```{r}
+library(ggplot2)
+library(caret)
+
+trainURL <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+
+#the test set will be used at the end 
+testURL <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+
+download.file(trainURL, destfile = "./trainWLED.csv")
+
+weightlift <- read.csv("./trainWLED.csv",stringsAsFactors = FALSE, na.strings = " ")
+                      
+
+```
+
+When downloading the data a large amount of NAs and character classes form (when stringsAsFactors = FALSE). So to check if those values mean anything, I've found the columns that become characters and I'll identify if they're useful. 
+
+```{r}
+
+#160 is classe predictor variable 
+weightlift[,160] <- as.factor(weightlift[,160])
+
+charcolumnlist = NULL 
+for(i in 1:159){
+if(class(weightlift[,i]) == "character"){ 
+        charcolumnlist <- c(charcolumnlist,i)
+        }
+}
+
+```
+
+re-downloading weightlift and using stringsAsFactors = TRUE, I'll select only these rows and see if they are usable. 
+```{r}
+possunusable <- read.csv("./trainWLED.csv", stringsAsFactors = TRUE, na.strings = " ")
+poss2 <- possunusable[,charcolumnlist]
+
+```
+
+As expected, besides the username, cvtd_timestamp, and new_window columns, the other 100 columns are NA over 99% of the time. I'll remove those columns. 
+
+```{r}
+rmcolumnlist <- charcolumnlist[-c(1:3)] #the first, second, and third values 
+
+weightsdata <- weightlift[,-rmcolumnlist]
+weightsdata[,60] <- as.factor(weightsdata[,60])
+
+rm(poss2, possunusable) #reduce clutter
+
+
+```
+
+
+##Building a Model 
+To start, I want to make an anonymous model (remove names) that doesn't use time data as a benchmark for other models to beat. I will ensemble the models as well, depending on their accuracies. 
+
+```{r}
+weightstrain <- weightsdata[8:60] #no windows, names, or time stamps 
+
+set.seed(4)
+
+inTrain <- createDataPartition(weightstrain$classe, p = .7, list = FALSE)
+
+training <- weightstrain[inTrain,]
+testing <- weightstrain[-inTrain,]
+
+LDAmodel <- train(classe ~., method = "lda", data = training)
+LDApred <- predict(LDAmodel, newdata = training)
+
+confusionMatrix(LDApred,training$classe)
+
+```
+
+70% accuracy is low so I'll test an RF model and compare. Using the parallel and doParallel packages as suggested by **https://github.com/lgreski/datasciencectacontent/blob/master/markdown/pml-randomForestPerformance.md**
+
+Note: *Cross Validation* is included in the trainControls for the RF Model.
+```{r}
+library(parallel)
+library(doParallel)
+
+cluster <- makeCluster(detectCores() - 1)  # using code from link
+registerDoParallel(cluster)                # using code from link 
+
+tcControls <- trainControl(method = "cv", number = 10, allowParallel = TRUE)
+
+RFmodel <- train(classe ~ ., method = "rf", data = training, trControl = tcControls)
+
+stopCluster(cluster)  # using code from link
+registerDoSEQ()       # using code from link 
+
+RFpred <- predict(RFmodel, newdata = training)
+confusionMatrix(RFpred, training$classe)
+
+```
+
+Using parallel processing to reduce my runtime to about 15 minutes, the confusionMatrix shows 100% accuracy - possibly overfitting or the worst case scenario, a classe proxy is still inside the dataset. 
+
+I'll use the test set to check the results. 
+
+```{r}
+RFtestpred <- predict(RFmodel, newdata = testing)
+
+confusionMatrix(RFtestpred, testing$classe)
+
+
+```
+
+##Out of Sample Error and Cross Validation 
+99.34% Accuracy on the testing set~ Thus an out of sample error of 1-Accuracy is estimated to be .66%. Although the 95% confidence interveral for the accuracy is (.991,.9953) so the out of sample error is between .66 with a 95% confidence interval of (.47%,.9%). 
+
+```{r}
+RFmodel
+```
+10 - fold cross validation was used in the random forest model. 
+
+
+
+
